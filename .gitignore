@@ -1,2 +1,5 @@
 *.class
 *.class
+webapps/FTPTest/WEB-INF/classes/LoginServlet.class
+webapps/FTPTest/WEB-INF/classes/SignupServlet.class
+webapps/FTPTest/WEB-INF/classes/SignupServlet.class
