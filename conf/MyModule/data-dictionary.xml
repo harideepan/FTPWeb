@@ -1,0 +1,72 @@
+<!DOCTYPE data-dictionary SYSTEM "data-dictionary.dtd">
+
+<data-dictionary name="MyModule">
+    <table name="Users">
+        <columns>
+            <column name="USER_ID">
+                <description>Unique Identifier of a User</description>
+                <data-type>BIGINT</data-type>
+                <nullable>false</nullable>
+                <uniquevalue-generation>
+                    <generator-name>Users.USER_ID</generator-name>
+                </uniquevalue-generation>
+            </column>
+            <column name="NAME">
+                <description>Name of the User</description>
+                <data-type>CHAR</data-type>
+                <max-size>100</max-size>
+                <nullable>false</nullable>
+                <unique>false</unique>
+            </column>
+            <column name="PASSWORD">
+                <description>Password fpr the user to login</description>
+                <data-type>CHAR</data-type>
+                <max-size>100</max-size>
+                <nullable>false</nullable>
+                <unique>false</unique>
+            </column>
+        </columns>
+        <primary-key name="Users_PK">
+            <primary-key-column>USER_ID</primary-key-column>
+        </primary-key>
+    </table>
+
+    <table name="Files">
+        <columns>
+            <column name="NAME">
+                <description>Name of the file</description>
+                <data-type>CHAR</data-type>
+				<max-size>50</max-size>
+                <nullable>false</nullable>
+				<unique>false</unique>
+            </column>
+            <column name="PATH">
+                <description>Path of the file</description>
+                <data-type>CHAR</data-type>
+                <max-size>50</max-size>
+                <nullable>false</nullable>
+                <unique>false</unique>
+            </column>
+            <column name="USER_ID">
+                <description>User ID of user who owns the file</description>
+                <data-type>BIGINT</data-type>
+                <nullable>false</nullable>
+            </column>
+        </columns>
+        <primary-key name="Files_PK">
+            <primary-key-column>USER_ID</primary-key-column>
+			<primary-key-column>NAME</primary-key-column>
+        </primary-key>
+        <foreign-keys>
+            <foreign-key name="Files_FK" reference-table-name="Users" isbidirectional="false">
+                <fk-columns>
+                    <fk-column>
+                        <fk-local-column>USER_ID</fk-local-column>
+                        <fk-reference-column>USER_ID</fk-reference-column>
+                    </fk-column>
+                </fk-columns>
+                <fk-constraints>ON-DELETE-CASCADE</fk-constraints>
+            </foreign-key>
+        </foreign-keys>
+    </table>    
+</data-dictionary>

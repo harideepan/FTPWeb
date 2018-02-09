@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--$Id$-->
+<extended-configurations> 
+<configuration name="DBName" value="postgres"/>
+<configuration name="DSAdapter" value="postgres"/>	<configuration name="StartDBServer" value="true"/>
+</extended-configurations>
