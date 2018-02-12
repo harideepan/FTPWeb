@@ -7,14 +7,14 @@
     <body>
 	<center>
 		<h1>Login</h1>
-        <form method="post" action="LoginServlet">
-  			User ID:
-  			<input type="text" name="userid" >
+        <form method="post" action='<%=response.encodeURL("j_security_check")%>'>
+  			User name:
+  			<input type="text" name="j_username" >
   			<br><br>
   			Password:
-  			<input type="password" name="password" >
+  			<input type="password" name="j_password" >
   			<br><br>
-  			<input type="submit" value="Submit"><br>
+  			<input type="submit" value="Login"><br>
 			<a href="signup.html">New user?</a>
 		</form>  
 	</center>

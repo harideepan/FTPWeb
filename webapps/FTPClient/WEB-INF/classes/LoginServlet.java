@@ -34,76 +34,70 @@ public class LoginServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, DataAccessException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            String userID=request.getParameter("userid");
-            String password=request.getParameter("password");
-
+        try (PrintWriter out = response.getWriter()) 
+		{
+			String name=request.getUserPrincipal().getName();
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet TestServlet</title>");            
+            out.println("<title>Servlet TestServlet</title>");         
             out.println("</head>");
             out.println("<body><center>");
-            
-            Criteria c = new Criteria(new Column("Users", "USER_ID"),Integer.parseInt(userID), QueryConstants.EQUAL);
-            DataObject d = DataAccess.get("Users",c);
-            Iterator it=d.getRows("Users");
-            if(it.hasNext())
-            {
-                Row r=(Row)it.next();
-                String password_=r.get("PASSWORD").toString();
-				if(password.equals(password_))
+			out.println("<h1>Welcome " + name + "</h1>");
+			out.println("<a href='logout.jsp'>Logout</a>");
+			FTPClient ftp=new FTPClient();
+			try 
+			{
+		        ftp.connect("localhost",4444);
+			    int reply = ftp.getReplyCode();
+				if (!FTPReply.isPositiveCompletion(reply)) {
+					out.println("<p>Error connecting to FTP server</p>");
+				    ftp.disconnect();
+				}
+				ftp.enterLocalPassiveMode();
+				ftp.login("Hariharan", "");
+				FTPFile[] files = ftp.listFiles("/Users/" + name);
+				int l=files.length;
+				out.println("<br><h2>Files in your workspace</h2>");	
+				if(l==0)
 				{
-					out.println("<h1>Welcome " + r.get("NAME") + "</h1>");
-					FTPClient ftp=new FTPClient();
-					try 
-					{
-		            	ftp.connect("localhost",4444);
-			        	int reply = ftp.getReplyCode();
-				        if (!FTPReply.isPositiveCompletion(reply)) {
-								out.println("<p>Error connecting to FTP server</p>");
-				                ftp.disconnect();
-				        }
-						ftp.enterLocalPassiveMode();
-				        ftp.login("Hariharan", "");
-						FTPFile[] files = ftp.listFiles("/Users/"+userID);
-						int l=files.length;
-						out.println("<br><h2>Files in your workspace</h2>");
-						
-						if(l==0)
-						{
-							out.println("<p>Workspace empty</p>");
-						}
-						else
-						{
-							out.println("<table border=\"1\"><tr><th>Name</th><th>Last modified</th><tr>");
-				            for (FTPFile file : files) {
-				                if (file.getType() == FTPFile.FILE_TYPE)
-									out.println("<tr>");
-									out.println("<td>" + file.getName() + "</td>");
-									out.println("<td>" + file.getTimestamp().getTime() + "</td>");
-									out.println("</tr>");
-				            }
-							out.println("</table>");
-						}
-						if (ftp.isConnected()) {
-		                    ftp.logout();
-		                    ftp.disconnect();
-						}
-					}
-					catch (Exception ex) {
-						out.println("Exception");
-			            Logger.getLogger(FTPClassA.class.getName()).log(Level.SEVERE, null, ex);
-			        }
+					out.println("<p>Workspace empty</p>");
 				}
 				else
 				{
-					out.println("<h1>Invalid credentials</h1>");
-					out.println("<a href=\"index.html\">Click here to login again</a>");
+					out.println("<table border=\"1\"><tr><th>Name</th><th>Last modified</th><tr>");
+				    for (FTPFile file : files) 
+					{
+						if (file.getType() == FTPFile.FILE_TYPE)
+						{
+							out.println("<tr>");
+							out.println("<td><form action='FileViewer' method='post'>");
+							out.println("<input type='hidden' name='filename' value='" + file.getName() + "' />");
+							out.println("<input type='hidden' name='action' value='existing'/>");
+							out.println("<input type='submit' style='width: 15em; background:none!important; border:none;color:#069;text-decoration:underline;cursor:pointer;' value='" + file.getName() + "'/>");
+							out.println("</form></td>");
+							out.println("<td>" + file.getTimestamp().getTime() + "</td>");
+							out.println("</tr>");
+						}
+				    }
+					out.println("</table>");
 				}
-            }
+				out.println("<form action='FileViewer' method='post'>");
+				out.println("<input type='hidden' name='action' value='new'/>");
+				out.println("<input type='submit' value='New file'/>");
+				out.println("</form>");
+				if (ftp.isConnected()) {
+		            ftp.logout();
+		            ftp.disconnect();
+				}
+			}
+			catch (Exception ex) {
+				out.println("Exception");
+				Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+			}
             out.println("</center></body>");
             out.println("</html>");
+			out.close();
         }
     }
 

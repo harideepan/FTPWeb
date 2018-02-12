@@ -1,25 +1,22 @@
-import com.adventnet.ds.query.Column;
-import com.adventnet.ds.query.Query;
-import com.adventnet.ds.query.SelectQuery;
-import com.adventnet.ds.query.SelectQueryImpl;
-import com.adventnet.ds.query.Table;
-import com.adventnet.persistence.Row;
 import com.adventnet.persistence.DataAccess;
+import com.adventnet.persistence.WritableDataObject;
+import com.adventnet.authentication.AAAUSER;
+import com.adventnet.authentication.AAALOGIN;
+import com.adventnet.authentication.AAAACCOUNT;
+import com.adventnet.authentication.AAAPASSWORD;
+import com.adventnet.authentication.AAAACCPASSWORD;
+import com.adventnet.authentication.util.AuthUtil;
 import com.adventnet.persistence.DataAccessException;
 import com.adventnet.persistence.DataObject;
-import com.adventnet.persistence.WritableDataObject;
-import com.adventnet.ds.query.Criteria;
+import com.adventnet.persistence.Row;
+import com.adventnet.mfw.bean.BeanUtil;
+import com.adventnet.persistence.Persistence;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.PrintCommandListener;
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPReply;
-import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -31,19 +28,48 @@ import javax.servlet.http.HttpServletResponse;
 public class SignupServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, DataAccessException {
+            throws ServletException, IOException, DataAccessException, Exception {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             String name=request.getParameter("name");
             String password=request.getParameter("password");
-            Row row=new Row("Users");
-			row.set("NAME", name);
+            
+            Persistence persistence = (Persistence) BeanUtil.lookup("Persistence"); 
+            DataObject dobj = persistence.constructDataObject();
+            Row userRow = new Row(AAAUSER.TABLE);
+            
+            userRow.set(AAAUSER.FIRST_NAME,name);
+            dobj.addRow(userRow);
+
+            Row loginRow = new Row(AAALOGIN.TABLE);
+            loginRow.set(AAALOGIN.NAME,name);
+            dobj.addRow(loginRow);
+
+            Row accRow = new Row(AAAACCOUNT.TABLE);
+            accRow.set(AAAACCOUNT.SERVICE_ID, new Long(1));
+            accRow.set(AAAACCOUNT.ACCOUNTPROFILE_ID,new Long(1));
+            dobj.addRow(accRow);
+
+            Row passwordRow = new Row(AAAPASSWORD.TABLE);
+            passwordRow.set(AAAPASSWORD.PASSWORD, password);
+            passwordRow.set(AAAPASSWORD.PASSWDPROFILE_ID,new Long(1));
+            dobj.addRow(passwordRow);
+
+            Row accPassRow = new Row(AAAACCPASSWORD.TABLE);
+            accPassRow.set(AAAACCPASSWORD.ACCOUNT_ID, accRow.get(AAAACCOUNT.ACCOUNT_ID));
+            accPassRow.set(AAAACCPASSWORD.PASSWORD_ID, passwordRow.get(AAAPASSWORD.PASSWORD_ID));
+            dobj.addRow(accPassRow);
+            
+            AuthUtil.createUserAccount(dobj);
+            
+            /*Row row=new Row("Users");
+            row.set("NAME", name);
             row.set("PASSWORD",password);
             DataObject dataObject = new WritableDataObject();
             dataObject.addRow(row);
-			DataAccess.add(dataObject);
+            DataAccess.add(dataObject);*/
 			
-			out.println("<!DOCTYPE html>");
+            out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
             out.println("<title>Signup success</title>");            
@@ -60,23 +86,24 @@ public class SignupServlet extends HttpServlet {
 		        }
 				ftp.enterLocalPassiveMode();
 		        ftp.login("Hariharan", "");
-				ftp.makeDirectory("/Users/"+row.get("USER_ID"));
+				ftp.makeDirectory("/Users/"+ name);
 				if (ftp.isConnected()) {
                     ftp.logout();
                     ftp.disconnect();
 				}
-				
+			}	
 			catch (Exception ex) {
 				out.println("Exception");
-	            Logger.getLogger(FTPClassA.class.getName()).log(Level.SEVERE, null, ex);
+	            Logger.getLogger(SignupServlet.class.getName()).log(Level.SEVERE, null, ex);
 	        }
 			
             
-	    	out.println("<p>Signup success. your User ID is : " + row.get("USER_ID") +  "</p>");
-			out.println("<a href=\"index.html\">Click here to login</a>");
+	    	out.println("<p>Signup success. your User ID is : " + userRow.get("USER_ID") +  "</p>");
+            //out.println("<p>Signup success.</p>");
+            out.println("<a href=\"LoginServlet\">Click here to login</a>");
             out.println("</center></body>");
             out.println("</html>");
-			out.close();
+            out.close();
         }
     }
 
@@ -85,7 +112,11 @@ public class SignupServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (DataAccessException ex) {
+        } 
+		catch (DataAccessException ex) {
+            Logger.getLogger(SignupServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+		catch (Exception ex) {
             Logger.getLogger(SignupServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -95,7 +126,11 @@ public class SignupServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (DataAccessException ex) {
+        } 
+		catch (DataAccessException ex) {
+            Logger.getLogger(SignupServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+		catch (Exception ex) {
             Logger.getLogger(SignupServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
