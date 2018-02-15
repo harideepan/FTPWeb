@@ -60,14 +60,15 @@ public class SignupServlet extends HttpServlet {
             accPassRow.set(AAAACCPASSWORD.PASSWORD_ID, passwordRow.get(AAAPASSWORD.PASSWORD_ID));
             dobj.addRow(accPassRow);
             
+            Row row=new Row("Users");
+            row.set("USER_ID", userRow.get(AAAUSER.USER_ID));
+            row.set("NAME", name);
+            row.set("ROLE","user");
+            dobj.addRow(row);
+
             AuthUtil.createUserAccount(dobj);
             
-            /*Row row=new Row("Users");
-            row.set("NAME", name);
-            row.set("PASSWORD",password);
-            DataObject dataObject = new WritableDataObject();
-            dataObject.addRow(row);
-            DataAccess.add(dataObject);*/
+            
 			
             out.println("<!DOCTYPE html>");
             out.println("<html>");

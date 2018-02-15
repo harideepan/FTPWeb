@@ -29,33 +29,47 @@
   </description>
 
 
-<security-constraint>
-<web-resource-collection>
-<web-resource-name>Secured Core Context</web-resource-name>
-<url-pattern>/LoginServlet</url-pattern>
-</web-resource-collection>
-<auth-constraint>
-<role-name>*</role-name>
-</auth-constraint>
-</security-constraint>
-
-<login-config>
-<auth-method>CUSTOMFORM</auth-method>
-<form-login-config>
-<form-login-page>/login.jsp</form-login-page>
-<form-error-page>/failure.html</form-error-page>
-</form-login-config>
-</login-config>
 
 
+    
+
+    <security-constraint>
+      <web-resource-collection>
+        <web-resource-name>Secured Core Context</web-resource-name>
+        <url-pattern>/LoginServlet</url-pattern>
+      </web-resource-collection>
+      <auth-constraint>
+        <role-name>*</role-name>
+      </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+      <auth-method>CUSTOMFORM</auth-method>
+      <form-login-config>
+        <form-login-page>/login.jsp</form-login-page>
+        <form-error-page>/failure.html</form-error-page>
+      </form-login-config>
+    </login-config>
+
+    <!--<filter>
+      <filter-name>UserFilter</filter-name> 
+      <filter-class>UserFilter</filter-class> 
+    </filter>
+
+    <filter-mapping>
+      <filter-name>UserFilter</filter-name> 
+      <servlet-name>LoginServlet</servlet-name>
+      <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>-->
+    
     <servlet>
-        <servlet-name>TestServlet</servlet-name>
-        <servlet-class>TestServlet</servlet-class>
+        <servlet-name>ChangeRole</servlet-name>
+        <servlet-class>ChangeRole</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>TestServlet</servlet-name>
-        <url-pattern>/TestServlet</url-pattern>
+        <servlet-name>ChangeRole</servlet-name>
+        <url-pattern>/ChangeRole</url-pattern>
     </servlet-mapping>
 	
 	<servlet>
