@@ -30,37 +30,44 @@ public class SaveFile extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) 
 		{
-			String fileContent=request.getParameter("filecontent");
-			String name=request.getUserPrincipal().getName();
-			String fileName=request.getParameter("filename");
-            
-			FTPClient ftp=new FTPClient();
-			try 
+			if(request.getUserPrincipal()==null)
 			{
-			    ftp.connect("localhost",4444);
-				int reply = ftp.getReplyCode();
-				if (!FTPReply.isPositiveCompletion(reply)) {
-					out.println("<p>Error connecting to FTP server</p>");
-					ftp.disconnect();
-				}
-				ftp.enterLocalPassiveMode();
-				ftp.login("Hariharan", "");
-					
-				if(!fileName.endsWith(".csv"))
-				{
-					InputStream stream = new ByteArrayInputStream(fileContent.getBytes());
-					ftp.storeFile("/Users/"+ name +"/"+fileName,stream);
-				}
-					
-				if (ftp.isConnected()) 
-				{
-			        ftp.logout();
-			        ftp.disconnect();
-				}
 				response.sendRedirect("LoginServlet");
 			}
-			catch (Exception ex) {
-				   Logger.getLogger(SaveFile.class.getName()).log(Level.SEVERE, null, ex);
+            else
+            {	
+
+            	String fileContent=request.getParameter("filecontent");
+				String name=request.getUserPrincipal().getName();
+				String fileName=request.getParameter("filename");
+				FTPClient ftp=new FTPClient();
+				try 
+				{
+				    ftp.connect("localhost",4444);
+					int reply = ftp.getReplyCode();
+					if (!FTPReply.isPositiveCompletion(reply)) {
+						out.println("<p>Error connecting to FTP server</p>");
+						ftp.disconnect();
+					}
+					ftp.enterLocalPassiveMode();
+					ftp.login("Hariharan", "");
+						
+					if(!fileName.endsWith(".csv"))
+					{
+						InputStream stream = new ByteArrayInputStream(fileContent.getBytes());
+						ftp.storeFile("/Users/"+ name +"/"+fileName,stream);
+					}
+						
+					if (ftp.isConnected()) 
+					{
+				        ftp.logout();
+				        ftp.disconnect();
+					}
+					response.sendRedirect("LoginServlet");
+				}
+				catch (Exception ex) {
+					   Logger.getLogger(SaveFile.class.getName()).log(Level.SEVERE, null, ex);
+				}
 			}
 		}
     }

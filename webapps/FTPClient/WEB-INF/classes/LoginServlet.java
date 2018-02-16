@@ -90,7 +90,9 @@ public class LoginServlet extends HttpServlet {
 				}
 				else
 				{
-					out.println("<table border=\"1\"><tr><th>Name</th><th>Last modified</th><tr>");
+					out.println("<table id=\"tblData\">");
+					out.println("<tbody>");
+					out.println("<tr><th>Name</th><th>Last modified</th><tr>");
 				    for (FTPFile file : files) 
 					{
 						if (file.getType() == FTPFile.FILE_TYPE)
@@ -105,6 +107,7 @@ public class LoginServlet extends HttpServlet {
 							out.println("</tr>");
 						}
 				    }
+				    out.println("</tbody>");
 					out.println("</table>");
 				}
 				out.println("<form action='FileViewer' method='post'>");
@@ -118,7 +121,9 @@ public class LoginServlet extends HttpServlet {
 					out.println("<div id=\"AdminPanel\" class=\"tabcontent\">");
 					d = DataAccess.get("Users",(Criteria)null);
 					it=d.getRows("Users");
-					out.println("<table border=\"1\"><tr><th>User name</th><th>Role</th><th>Action</th><tr>");
+					out.println("<table id=\"tblDataU\">");
+					out.println("<tbody>");
+					out.println("<tr><th>User name</th><th>Role</th><th>Action</th><tr>");
 					while(it.hasNext())
 					{
 						Row r=(Row)it.next();
@@ -142,10 +147,12 @@ public class LoginServlet extends HttpServlet {
 							out.println("</form></td>");
 							out.println("</tr>");
 						}
-					} 
+					}
+					out.println("</tbody>");
+					out.println("</table>"); 
 					out.println("</div>");
 				}
-				out.println("<script src=\"opentab.js\"></script><script>document.getElementById(\"defaultOpen\").click();</script>");
+				
 				if (ftp.isConnected()) {
 		            ftp.logout();
 		            ftp.disconnect();
@@ -156,6 +163,8 @@ public class LoginServlet extends HttpServlet {
 				Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			out.println("</center>");
+			out.println("<script type=\"text/javascript\" src=\"jquery-3.3.1.js\"></script>");
+			out.println("<script src=\"opentab.js\"></script><script src=\"pagination.js\"></script><script>document.getElementById(\"defaultOpen\").click();</script>");
             out.println("</body>");
             out.println("</html>");
 			out.close();

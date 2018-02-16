@@ -48,3 +48,20 @@ td, th {
     padding: 8px;
 }
 
+.focus {
+  background-color: #ff5722;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.pageNumber {
+  border: 1px solid #ddd;
+  display: inline-block;
+  width: 40px;
+  text-align: center;
+  font-size: 30px;
+}
+.pagination {
+   margin-top: 10px;
+}

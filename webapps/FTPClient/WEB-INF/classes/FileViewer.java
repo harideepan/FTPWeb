@@ -42,88 +42,96 @@ public class FileViewer extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) 
 		{
-			String fileName=request.getParameter("filename");
-			String action=request.getParameter("action");
-			String name=request.getUserPrincipal().getName();
 			
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>File Viewer</title>");            
-            out.println("</head>");
-            out.println("<body><center>");
-            
-			if(!action.equals("new"))
+
+			if(request.getUserPrincipal()==null)
 			{
-				FTPClient ftp=new FTPClient();
-				try 
-				{
-			    	ftp.connect("localhost",4444);
-				    int reply = ftp.getReplyCode();
-					if (!FTPReply.isPositiveCompletion(reply)) {
-						out.println("<p>Error connecting to FTP server</p>");
-						ftp.disconnect();
-					}
-					ftp.enterLocalPassiveMode();
-					ftp.login("Hariharan", "");
-					
-					if(!fileName.endsWith(".csv"))
-					{
-						InputStream is=ftp.retrieveFileStream("/Users/"+ name +"/"+fileName);
-		                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-		                String line;
-		                String fileContent="";
-		                while((line=br.readLine())!=null)
-		                {
-		                    fileContent=fileContent + "\n" + line;
-		                }
-		                out.println("<form action=\"SaveFile\" method=\"post\">");
-						out.println("File name <input type=\"text\" name=\"filename\" value=\"" + fileName + "\">");
-						out.println("<br><textarea style='width: 50em; height:50em' name=\"filecontent\">"+ fileContent +"</textarea>");
-						out.println("<br><input type=\"submit\" value=\"Save file\">");
-						out.println("</form>");
-					}
-					else
-					{
-						out.println("<form action=\"SaveFile\" method=\"post\">");
-						out.println("File name <input type=\"text\" name=\"filename\" value=\"" + fileName + "\">");
-						out.println("<table border=\"1\">");
-						InputStream is=ftp.retrieveFileStream("/Users/"+ name +"/"+fileName);
-		                List<String >fileContent=new BufferedReader(new InputStreamReader(is)).lines().collect(Collectors.toList());
-                		for (String line:fileContent)
-                		{
-							out.println("<tr>");
-                    		String[] array = line.split(",");
-							for(int j=0;j<array.length;j++)
-							{
-								out.println("<td>" + array[j] + "</td>");
-							}
-							out.println("</tr>");
-                		}
-						//out.println("<br><input type=\"submit\" value=\"Save file\">");
-						out.println("</form>");
-					}
-					
-					if (ftp.isConnected()) {
-			        	ftp.logout();
-			            ftp.disconnect();
-					}
-				}
-				catch (Exception ex) {
-					out.println("Exception");
-				    Logger.getLogger(FileViewer.class.getName()).log(Level.SEVERE, null, ex);
-				}
+				response.sendRedirect("LoginServlet");
 			}
 			else
-			{
-				out.println("<form action=\"SaveFile\" method=\"post\">");
-				out.println("File name <input type=\"text\" name=\"filename\" value=\"\">");
-				out.println("<br><textarea style='width: 50em; height:50em' name=\"filecontent\"></textarea>");
-				out.println("<br><input type=\"submit\" value=\"Save file\">");
-				out.println("</form>");
-			}
-            out.println("</center></body>");
-            out.println("</html>");
+			{	
+				String fileName=request.getParameter("filename");
+				String action=request.getParameter("action");
+				String name=request.getUserPrincipal().getName();
+	            out.println("<!DOCTYPE html>");
+	            out.println("<html>");
+	            out.println("<head>");
+	            out.println("<title>File Viewer</title>");            
+	            out.println("</head>");
+	            out.println("<body><center>");
+	            
+				if(!action.equals("new"))
+				{
+					FTPClient ftp=new FTPClient();
+					try 
+					{
+				    	ftp.connect("localhost",4444);
+					    int reply = ftp.getReplyCode();
+						if (!FTPReply.isPositiveCompletion(reply)) {
+							out.println("<p>Error connecting to FTP server</p>");
+							ftp.disconnect();
+						}
+						ftp.enterLocalPassiveMode();
+						ftp.login("Hariharan", "");
+						
+						if(!fileName.endsWith(".csv"))
+						{
+							InputStream is=ftp.retrieveFileStream("/Users/"+ name +"/"+fileName);
+			                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+			                String line;
+			                String fileContent="";
+			                while((line=br.readLine())!=null)
+			                {
+			                    fileContent=fileContent + "\n" + line;
+			                }
+			                out.println("<form action=\"SaveFile\" method=\"post\">");
+							out.println("File name <input type=\"text\" name=\"filename\" value=\"" + fileName + "\">");
+							out.println("<br><textarea style='width: 50em; height:50em' name=\"filecontent\">"+ fileContent +"</textarea>");
+							out.println("<br><input type=\"submit\" value=\"Save file\">");
+							out.println("</form>");
+						}
+						else
+						{
+							out.println("<form action=\"SaveFile\" method=\"post\">");
+							out.println("File name <input type=\"text\" name=\"filename\" value=\"" + fileName + "\">");
+							out.println("<table border=\"1\">");
+							InputStream is=ftp.retrieveFileStream("/Users/"+ name +"/"+fileName);
+			                List<String >fileContent=new BufferedReader(new InputStreamReader(is)).lines().collect(Collectors.toList());
+	                		for (String line:fileContent)
+	                		{
+								out.println("<tr>");
+	                    		String[] array = line.split(",");
+								for(int j=0;j<array.length;j++)
+								{
+									out.println("<td>" + array[j] + "</td>");
+								}
+								out.println("</tr>");
+	                		}
+							//out.println("<br><input type=\"submit\" value=\"Save file\">");
+							out.println("</form>");
+						}
+						
+						if (ftp.isConnected()) {
+				        	ftp.logout();
+				            ftp.disconnect();
+						}
+					}
+					catch (Exception ex) {
+						out.println("Exception");
+					    Logger.getLogger(FileViewer.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				}
+				else
+				{
+					out.println("<form action=\"SaveFile\" method=\"post\">");
+					out.println("File name <input type=\"text\" name=\"filename\" value=\"\">");
+					out.println("<br><textarea style='width: 50em; height:50em' name=\"filecontent\"></textarea>");
+					out.println("<br><input type=\"submit\" value=\"Save file\">");
+					out.println("</form>");
+				}
+	            out.println("</center></body>");
+	            out.println("</html>");
+	        }
         }
     }
 

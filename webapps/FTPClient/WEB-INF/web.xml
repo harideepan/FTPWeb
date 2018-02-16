@@ -37,6 +37,8 @@
       <web-resource-collection>
         <web-resource-name>Secured Core Context</web-resource-name>
         <url-pattern>/LoginServlet</url-pattern>
+		<url-pattern>/FileViewer</url-pattern>
+		<url-pattern>/ChangeRole</url-pattern>
       </web-resource-collection>
       <auth-constraint>
         <role-name>*</role-name>
@@ -51,7 +53,7 @@
       </form-login-config>
     </login-config>
 
-    <!--<filter>
+    <filter>
       <filter-name>UserFilter</filter-name> 
       <filter-class>UserFilter</filter-class> 
     </filter>
@@ -60,7 +62,7 @@
       <filter-name>UserFilter</filter-name> 
       <servlet-name>LoginServlet</servlet-name>
       <dispatcher>REQUEST</dispatcher>
-    </filter-mapping>-->
+    </filter-mapping>
     
     <servlet>
         <servlet-name>ChangeRole</servlet-name>

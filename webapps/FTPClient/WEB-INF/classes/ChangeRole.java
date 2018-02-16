@@ -32,15 +32,21 @@ public class ChangeRole extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) 
 		{
-			String name=request.getParameter("name");
-			String toRole=request.getParameter("toRole");
-
-			UpdateQuery updateQuery = new UpdateQueryImpl("Users");
-			Criteria c = new Criteria(new Column("Users", "NAME"),name, QueryConstants.EQUAL);
-			updateQuery.setCriteria(c);
-			updateQuery.setUpdateColumn("ROLE",toRole);
-			DataAccess.update(updateQuery);
-			response.sendRedirect("LoginServlet");
+            if(request.getUserPrincipal()==null)
+            {
+                response.sendRedirect("LoginServlet");
+            }
+            else
+            {    
+                String name=request.getParameter("name");
+                String toRole=request.getParameter("toRole");
+    			UpdateQuery updateQuery = new UpdateQueryImpl("Users");
+    			Criteria c = new Criteria(new Column("Users", "NAME"),name, QueryConstants.EQUAL);
+    			updateQuery.setCriteria(c);
+    			updateQuery.setUpdateColumn("ROLE",toRole);
+    			DataAccess.update(updateQuery);
+    			response.sendRedirect("LoginServlet");
+            }
         }
     }
 
