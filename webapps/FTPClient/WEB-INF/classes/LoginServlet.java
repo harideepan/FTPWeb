@@ -1,7 +1,9 @@
 import com.adventnet.ds.query.Column;
+import com.adventnet.ds.query.SortColumn;
 import com.adventnet.ds.query.Query;
 import com.adventnet.ds.query.SelectQuery;
 import com.adventnet.ds.query.SelectQueryImpl;
+import com.adventnet.ds.query.Range;
 import com.adventnet.ds.query.Table;
 import com.adventnet.persistence.Row;
 import com.adventnet.persistence.DataAccess;
@@ -10,6 +12,14 @@ import com.adventnet.persistence.DataObject;
 import com.adventnet.persistence.WritableDataObject;
 import com.adventnet.ds.query.Criteria;
 import com.adventnet.ds.query.QueryConstants;
+import com.adventnet.ds.query.QueryConstructionException;
+import com.adventnet.db.api.RelationalAPI;
+import com.adventnet.ds.query.DataSet;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -22,6 +32,7 @@ import java.lang.Math;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -29,6 +40,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 
 public class LoginServlet extends HttpServlet {
 
@@ -187,52 +199,63 @@ public class LoginServlet extends HttpServlet {
 				if(admin)
 				{
 					out.println("<div id=\"AdminPanel\" class=\"tabcontent\">");
-					d = DataAccess.get("Users",(Criteria)null);
+
+			        RelationalAPI relApi = RelationalAPI.getInstance();
+			        Table table = new Table("Users");
+			        c = new Criteria(new Column("Users", "NAME"),name, QueryConstants.NOT_EQUAL);
+			        SelectQuery selectQuery = new SelectQueryImpl(table);
+			        Column countCol = new Column("Users", "USER_ID").count();
+			        selectQuery.addSelectColumn(countCol);
+			        selectQuery.setCriteria(c);
+			        Connection conn = null;
+			        DataSet ds = null;
+					try {
+			            conn = relApi.getConnection();
+			            ds = relApi.executeQuery(selectQuery, conn);
+			            if(ds.next())
+			            {
+			                l=Integer.parseInt(ds.getAsString(1));//Number of users
+			            }
+			        } catch (SQLException ex) {
+			            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+			        } catch (QueryConstructionException ex) {
+			            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+			        }
+
+					selectQuery = new SelectQueryImpl(table);
+        			selectQuery.setCriteria(c);
+        			Column columns = new Column("Users", "*");
+        			selectQuery.addSelectColumn(columns);
+        			start=(pageNoUsers-1)*recordsPerPage+1;
+        			Range range=new Range(start,recordsPerPage);
+        			selectQuery.setRange(range);
+        			selectQuery.addSortColumn(new SortColumn(Column.getColumn("Users", "USER_ID"),true));
+					d = DataAccess.get(selectQuery);
 					it=d.getRows("Users");
-					l=0;
-					while(it.hasNext())
-					{
-						it.next();
-						l++;
-					}
-					l--;//excluding the current user
+					
 					totalPages=(l/recordsPerPage)+(((l%recordsPerPage)==0)?0:1);
-					start=(pageNoUsers-1)*recordsPerPage;
-					end=start+recordsPerPage-1;
-					if(end+1>l)
-					{
-						end=l-1;
-					}
-					it=d.getRows("Users");
-					int index=0;
+					
 					out.println("<table border=\"1\"><tr><th>User name</th><th>Role</th><th>Action</th><tr>");
 					while(it.hasNext())
 					{
 						Row r=(Row)it.next();
-						if(!r.get(2).toString().equals(name))
-						{	
-							if(index>=start && index<=end)
-							{
-								out.println("<tr>");
-								out.println("<td>" + r.get(2) + "</td>");
-								out.println("<td>" + r.get(3) + "</td>");
-								out.println("<td><form action='ChangeRole' method='post'>");
-								out.println("<input type='hidden' name='name' value='" + r.get(2) + "' />");
-								if(r.get(3).toString().equalsIgnoreCase("admin"))
-								{
-									out.println("<input type='hidden' name='toRole' value='user'/>");
-									out.println("<input type='submit' value='Remove admin rights'/>");
-								}
-								else
-								{
-									out.println("<input type='hidden' name='toRole' value='admin'/>");
-									out.println("<input type='submit' value='Promote to admin'/>");
-								}
-								out.println("</form></td>");
-								out.println("</tr>");
-							}
-							index++;
+						out.println("<tr>");
+						out.println("<td>" + r.get(2) + "</td>");
+						out.println("<td>" + r.get(3) + "</td>");
+						out.println("<td><form action='ChangeRole' method='post'>");
+						out.println("<input type='hidden' name='name' value='" + r.get(2) + "' />");
+						if(r.get(3).toString().equalsIgnoreCase("admin"))
+						{
+							out.println("<input type='hidden' name='toRole' value='user'/>");
+							out.println("<input type='submit' value='Remove admin rights'/>");
 						}
+						else
+						{
+							out.println("<input type='hidden' name='toRole' value='admin'/>");
+							out.println("<input type='submit' value='Promote to admin'/>");
+						}
+						out.println("</form></td>");
+						out.println("</tr>");
 					} 
 					out.println("</table>");
 					out.println("<div class='pagination'>");
@@ -259,7 +282,7 @@ public class LoginServlet extends HttpServlet {
 				    }
 				    out.println("</div>");
 				    out.println("<div>");
-				    out.println("Showing " + (start+1) + "-" + (end+1) + " of " + l);
+				    out.println("Showing " + (start) + "-" + (start+recordsPerPage-1) + " of " + l);
 				    out.println("</div>");
 
 					out.println("</div>");
