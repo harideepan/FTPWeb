@@ -18,6 +18,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPFile;
 
+import java.lang.Math;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
@@ -37,7 +38,37 @@ public class LoginServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) 
 		{
 			String name=request.getUserPrincipal().getName();
+			String pageNumberFiles=request.getParameter("pageNoFiles");
+			int pageNoFiles;
+			String pageNumberUsers=request.getParameter("pageNoUsers");
+			int pageNoUsers;
+			String defaultOpen=request.getParameter("defaultOpen");
+
+			int recordsPerPage=5;
 			boolean admin=false;
+
+			if(pageNumberFiles==null)
+			{
+				pageNoFiles=1;
+			}
+			else
+			{
+				pageNoFiles=Integer.parseInt(pageNumberFiles);
+			}
+
+			if(pageNumberUsers==null)
+			{
+				pageNoUsers=1;
+			}
+			else
+			{
+				pageNoUsers=Integer.parseInt(pageNumberUsers);
+			}
+
+			if(defaultOpen==null)
+			{
+				defaultOpen="Home";
+			}
 
 			Criteria c = new Criteria(new Column("Users", "NAME"),name, QueryConstants.EQUAL);
 			DataObject d = DataAccess.get("Users",c);
@@ -60,11 +91,16 @@ public class LoginServlet extends HttpServlet {
             out.println("</head>");
             out.println("<body><center>");
             
-            
-            out.println("<button class=\"tablink\" onclick=\"openPage('Home', this, '#2196F3')\" id=\"defaultOpen\">Home</button>");
+            if(!defaultOpen.equalsIgnoreCase("AdminPanel"))
+            	out.println("<button class=\"tablink\" onclick=\"openPage('Home', this, '#2196F3')\" id=\"defaultOpen\">Home</button>");
+            else
+            	out.println("<button class=\"tablink\" onclick=\"openPage('Home', this, '#2196F3')\">Home</button>");
             if(admin)
             {
-            	out.println("<button class=\"tablink\" onclick=\"openPage('AdminPanel', this, '#ff5722')\">Admin Panel</button>");
+            	if(!defaultOpen.equalsIgnoreCase("AdminPanel"))
+            		out.println("<button class=\"tablink\" onclick=\"openPage('AdminPanel', this, '#ff5722')\">Admin Panel</button>");
+            	else
+            		out.println("<button class=\"tablink\" onclick=\"openPage('AdminPanel', this, '#ff5722')\" id=\"defaultOpen\">Admin Panel</button>");
             }
 
             out.println("<div id=\"Home\" class=\"tabcontent\">");
@@ -83,6 +119,14 @@ public class LoginServlet extends HttpServlet {
 				ftp.login("Hariharan", "");
 				FTPFile[] files = ftp.listFiles("/Users/" + name);
 				int l=files.length;
+				int totalPages=(l/recordsPerPage)+(((l%recordsPerPage)==0)?0:1);
+				
+				int start=(pageNoFiles-1)*recordsPerPage;
+				int end=start+recordsPerPage-1;
+				if(end+1>l)
+				{
+					end=l-1;
+				}
 				out.println("<br><h2>Files in your workspace</h2>");	
 				if(l==0)
 				{
@@ -90,11 +134,10 @@ public class LoginServlet extends HttpServlet {
 				}
 				else
 				{
-					out.println("<table id=\"tblData\">");
-					out.println("<tbody>");
-					out.println("<tr><th>Name</th><th>Last modified</th><tr>");
-				    for (FTPFile file : files) 
+					out.println("<table border=\"1\"><tr><th>Name</th><th>Last modified</th><tr>");
+				    for (int i=start;i<=end;i++) 
 					{
+						FTPFile file=files[i];
 						if (file.getType() == FTPFile.FILE_TYPE)
 						{
 							out.println("<tr>");
@@ -107,8 +150,33 @@ public class LoginServlet extends HttpServlet {
 							out.println("</tr>");
 						}
 				    }
-				    out.println("</tbody>");
 					out.println("</table>");
+					out.println("<div class='pagination'>");
+				    if(pageNoFiles!=1)
+				    {
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoFiles="+ 1 +"'><<</a>");
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoFiles="+ (pageNoFiles-1) +"'><</a>");
+				    }
+				    for(int i=1;i<=totalPages;i++)
+				    {
+				    	if(i==pageNoFiles)
+				    	{
+				    		out.print("<a class='pageNumber current' href='LoginServlet?pageNoFiles="+ i +"'>" + i + "</a>");
+				    	}
+				    	else
+				    	{	
+				    		out.print("<a class='pageNumber' href='LoginServlet?pageNoFiles="+ i +"'>" + i + "</a>");
+				    	}
+				    }
+				    if(pageNoFiles!=totalPages)
+				    {
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoFiles="+ (pageNoFiles+1) +"'>></a>");
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoFiles="+ totalPages +"'>>></a>");
+				    }
+				    out.println("</div>");
+				    out.println("<div>");
+				    out.println("Showing " + (start+1) + "-" + (end+1) + " of " + l);
+				    out.println("</div>");
 				}
 				out.println("<form action='FileViewer' method='post'>");
 				out.println("<input type='hidden' name='action' value='new'/>");
@@ -121,38 +189,82 @@ public class LoginServlet extends HttpServlet {
 					out.println("<div id=\"AdminPanel\" class=\"tabcontent\">");
 					d = DataAccess.get("Users",(Criteria)null);
 					it=d.getRows("Users");
-					out.println("<table id=\"tblDataU\">");
-					out.println("<tbody>");
-					out.println("<tr><th>User name</th><th>Role</th><th>Action</th><tr>");
+					l=0;
+					while(it.hasNext())
+					{
+						it.next();
+						l++;
+					}
+					l--;//excluding the current user
+					totalPages=(l/recordsPerPage)+(((l%recordsPerPage)==0)?0:1);
+					start=(pageNoUsers-1)*recordsPerPage;
+					end=start+recordsPerPage-1;
+					if(end+1>l)
+					{
+						end=l-1;
+					}
+					it=d.getRows("Users");
+					int index=0;
+					out.println("<table border=\"1\"><tr><th>User name</th><th>Role</th><th>Action</th><tr>");
 					while(it.hasNext())
 					{
 						Row r=(Row)it.next();
 						if(!r.get(2).toString().equals(name))
 						{	
-							out.println("<tr>");
-							out.println("<td>" + r.get(2) + "</td>");
-							out.println("<td>" + r.get(3) + "</td>");
-							out.println("<td><form action='ChangeRole' method='post'>");
-							out.println("<input type='hidden' name='name' value='" + r.get(2) + "' />");
-							if(r.get(3).toString().equalsIgnoreCase("admin"))
+							if(index>=start && index<=end)
 							{
-								out.println("<input type='hidden' name='toRole' value='user'/>");
-								out.println("<input type='submit' value='Remove admin rights'/>");
+								out.println("<tr>");
+								out.println("<td>" + r.get(2) + "</td>");
+								out.println("<td>" + r.get(3) + "</td>");
+								out.println("<td><form action='ChangeRole' method='post'>");
+								out.println("<input type='hidden' name='name' value='" + r.get(2) + "' />");
+								if(r.get(3).toString().equalsIgnoreCase("admin"))
+								{
+									out.println("<input type='hidden' name='toRole' value='user'/>");
+									out.println("<input type='submit' value='Remove admin rights'/>");
+								}
+								else
+								{
+									out.println("<input type='hidden' name='toRole' value='admin'/>");
+									out.println("<input type='submit' value='Promote to admin'/>");
+								}
+								out.println("</form></td>");
+								out.println("</tr>");
 							}
-							else
-							{
-								out.println("<input type='hidden' name='toRole' value='admin'/>");
-								out.println("<input type='submit' value='Promote to admin'/>");
-							}
-							out.println("</form></td>");
-							out.println("</tr>");
+							index++;
 						}
-					}
-					out.println("</tbody>");
-					out.println("</table>"); 
+					} 
+					out.println("</table>");
+					out.println("<div class='pagination'>");
+					if(pageNoUsers!=1)
+				    {
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoUsers="+ 1 +"&defaultOpen=AdminPanel'><<</a>");
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoUsers="+ (pageNoUsers-1) +"&defaultOpen=AdminPanel'><</a>");
+				    }
+				    for(int i=1;i<=totalPages;i++)
+				    {
+				    	if(i==pageNoUsers)
+				    	{
+				    		out.print("<a class='pageNumber current' href='LoginServlet?pageNoUsers="+ i +"&defaultOpen=AdminPanel'>" + i + "</a>");
+				    	}
+				    	else
+				    	{	
+				    		out.print("<a class='pageNumber' href='LoginServlet?pageNoUsers="+ i +"&defaultOpen=AdminPanel'>" + i + "</a>");
+				    	}
+				    }
+				    if(pageNoUsers!=totalPages)
+				    {
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoUsers="+ (pageNoUsers+1) +"&defaultOpen=AdminPanel'>></a>");
+				    	out.print("<a class='pageNumber' href='LoginServlet?pageNoUsers="+ totalPages +"&defaultOpen=AdminPanel'>>></a>");
+				    }
+				    out.println("</div>");
+				    out.println("<div>");
+				    out.println("Showing " + (start+1) + "-" + (end+1) + " of " + l);
+				    out.println("</div>");
+
 					out.println("</div>");
 				}
-				
+				out.println("<script src=\"opentab.js\"></script><script>document.getElementById(\"defaultOpen\").click();</script>");
 				if (ftp.isConnected()) {
 		            ftp.logout();
 		            ftp.disconnect();
@@ -163,8 +275,6 @@ public class LoginServlet extends HttpServlet {
 				Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			out.println("</center>");
-			out.println("<script type=\"text/javascript\" src=\"jquery-3.3.1.js\"></script>");
-			out.println("<script src=\"opentab.js\"></script><script src=\"pagination.js\"></script><script>document.getElementById(\"defaultOpen\").click();</script>");
             out.println("</body>");
             out.println("</html>");
 			out.close();

@@ -48,9 +48,16 @@ td, th {
     padding: 8px;
 }
 
-.focus {
-  background-color: #ff5722;
+
+.pageNumber .hover {
+  background-color: #dddddd;
   color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.current {
+  background-color: #ff5722;
   cursor: pointer;
   font-weight: bold;
 }
@@ -58,8 +65,10 @@ td, th {
 .pageNumber {
   border: 1px solid #ddd;
   display: inline-block;
+  color: white;
   width: 40px;
   text-align: center;
+  text-decoration: none;
   font-size: 30px;
 }
 .pagination {
