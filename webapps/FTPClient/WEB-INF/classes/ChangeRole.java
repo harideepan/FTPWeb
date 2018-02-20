@@ -40,12 +40,13 @@ public class ChangeRole extends HttpServlet {
             {    
                 String name=request.getParameter("name");
                 String toRole=request.getParameter("toRole");
+                String pageNoUsers=request.getParameter("pageNoUsers");
     			UpdateQuery updateQuery = new UpdateQueryImpl("Users");
     			Criteria c = new Criteria(new Column("Users", "NAME"),name, QueryConstants.EQUAL);
     			updateQuery.setCriteria(c);
     			updateQuery.setUpdateColumn("ROLE",toRole);
     			DataAccess.update(updateQuery);
-    			response.sendRedirect("LoginServlet");
+    			response.sendRedirect("LoginServlet?defaultOpen=AdminPanel&pageNoUsers="+ (pageNoUsers));
             }
         }
     }

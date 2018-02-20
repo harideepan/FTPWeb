@@ -236,13 +236,15 @@ public class LoginServlet extends HttpServlet {
 					totalPages=(l/recordsPerPage)+(((l%recordsPerPage)==0)?0:1);
 					
 					out.println("<table border=\"1\"><tr><th>User name</th><th>Role</th><th>Action</th><tr>");
+					int numberOfRows=0;
 					while(it.hasNext())
 					{
+						numberOfRows++;
 						Row r=(Row)it.next();
 						out.println("<tr>");
 						out.println("<td>" + r.get(2) + "</td>");
 						out.println("<td>" + r.get(3) + "</td>");
-						out.println("<td><form action='ChangeRole' method='post'>");
+						out.println("<td><form action='ChangeRole?pageNoUsers="+ pageNoUsers +"' method='post'>");
 						out.println("<input type='hidden' name='name' value='" + r.get(2) + "' />");
 						if(r.get(3).toString().equalsIgnoreCase("admin"))
 						{
@@ -282,7 +284,7 @@ public class LoginServlet extends HttpServlet {
 				    }
 				    out.println("</div>");
 				    out.println("<div>");
-				    out.println("Showing " + (start) + "-" + (start+recordsPerPage-1) + " of " + l);
+				    out.println("Showing " + (start) + "-" + (start+numberOfRows-1) + " of " + l);
 				    out.println("</div>");
 
 					out.println("</div>");

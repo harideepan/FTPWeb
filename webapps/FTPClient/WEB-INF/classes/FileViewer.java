@@ -53,10 +53,16 @@ public class FileViewer extends HttpServlet {
 				String fileName=request.getParameter("filename");
 				String action=request.getParameter("action");
 				String name=request.getUserPrincipal().getName();
+				String pageNumber=request.getParameter("pageNumber");
+				int pageNo;
+
+				
+
 	            out.println("<!DOCTYPE html>");
 	            out.println("<html>");
 	            out.println("<head>");
-	            out.println("<title>File Viewer</title>");            
+	            out.println("<title>File Viewer</title>"); 
+	            out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">");           
 	            out.println("</head>");
 	            out.println("<body><center>");
 	            
@@ -92,13 +98,33 @@ public class FileViewer extends HttpServlet {
 						}
 						else
 						{
+							if(pageNumber==null)
+							{
+								pageNo=1;
+							}
+							else
+							{
+								pageNo=Integer.parseInt(pageNumber);
+							}
 							out.println("<form action=\"SaveFile\" method=\"post\">");
 							out.println("File name <input type=\"text\" name=\"filename\" value=\"" + fileName + "\">");
 							out.println("<table border=\"1\">");
 							InputStream is=ftp.retrieveFileStream("/Users/"+ name +"/"+fileName);
 			                List<String >fileContent=new BufferedReader(new InputStreamReader(is)).lines().collect(Collectors.toList());
-	                		for (String line:fileContent)
+			                int recordsPerPage=50;
+			                int l=fileContent.size();
+							int totalPages=(l/recordsPerPage)+(((l%recordsPerPage)==0)?0:1);
+							
+							int start=(pageNo-1)*recordsPerPage;
+							int end=start+recordsPerPage-1;
+							if(end+1>l)
+							{
+								end=l-1;
+							}
+
+	                		for (int i=start;i<=end;i++)
 	                		{
+	                			String line=fileContent.get(i);
 								out.println("<tr>");
 	                    		String[] array = line.split(",");
 								for(int j=0;j<array.length;j++)
@@ -108,6 +134,33 @@ public class FileViewer extends HttpServlet {
 								out.println("</tr>");
 	                		}
 							//out.println("<br><input type=\"submit\" value=\"Save file\">");
+							out.println("</table>");
+							out.println("<div class='pagination'>");
+						    if(pageNo!=1)
+						    {
+						    	out.print("<a class='pageNumber' href='FileViewer?pageNumber="+ 1 +"&action=existing&filename="+ fileName+"'><<</a>");
+						    	out.print("<a class='pageNumber' href='FileViewer?pageNumber="+ (pageNo-1) +"&action=existing&filename="+ fileName+"'><</a>");
+						    }
+						    for(int i=1;i<=totalPages;i++)
+						    {
+						    	if(i==pageNo)
+						    	{
+						    		out.print("<a class='pageNumber current' href='FileViewer?pageNumber="+ i +"&action=existing&filename="+ fileName+"'>" + i + "</a>");
+						    	}
+						    	else
+						    	{	
+						    		out.print("<a class='pageNumber' href='FileViewer?pageNumber="+ i +"&action=existing&filename="+ fileName+"'>" + i + "</a>");
+						    	}
+						    }
+						    if(pageNo!=totalPages)
+						    {
+						    	out.print("<a class='pageNumber' href='FileViewer?pageNumber="+ (pageNo+1) +"&action=existing&filename="+ fileName+"'>></a>");
+						    	out.print("<a class='pageNumber' href='FileViewer?pageNumber="+ totalPages +"&action=existing&filename="+ fileName+"'>>></a>");
+						    }
+						    out.println("</div>");
+						    out.println("<div>");
+						    out.println("Showing " + (start+1) + "-" + (end+1) + " of " + l);
+						    out.println("</div>");
 							out.println("</form>");
 						}
 						
